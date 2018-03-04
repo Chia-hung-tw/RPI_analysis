@@ -110,7 +110,7 @@ void makePlots::Loop(){
   */
   // An example shows how to check the ADC vs TS for certain channel(injected)
   // Remove this comment to run
-  /*
+  
   TGraph *gr; 
   for(int ev = 0; ev < nevents ; ++ev){
     //if(ev % 5 != 0) continue;
@@ -122,10 +122,7 @@ void makePlots::Loop(){
       H = HITS->Hits.at(hit);
       if(H.chip != 0) continue;      
       if(H.ch != 30 ) continue;
-      bool skip_flag = true;
-      for(int i = 0 ; i < 12 ; ++i){
-	if(H.SCA_hg[i] > 300) skip_flag = false;}
-      if(skip_flag) continue;
+
       gr = new TGraph(13, TS,H.SCA_hg );
       gr->SetMarkerColor(H.chip+2);
       gr->SetMarkerStyle(22);
@@ -140,11 +137,15 @@ void makePlots::Loop(){
       //if(ev == 400){
 	//sprintf(plot_title,"%s.png",plot_title);
 	//c1->SaveAs(plot_title);} // remove the comment to save plots
-      getchar();
+      //getchar();
+      if(H.chip == 0 && ev %5 == 0){
+	sprintf(plot_title,"gif/old_DAQ/HG_evt%d.png",ev);
+	//c1->SaveAs(plot_title);
+      }
     }
   }      
-  */
-    
+  
+  /*    
   TGraph *gr;
   float dac[nevents];
   float ADC[nevents];
@@ -174,7 +175,7 @@ void makePlots::Loop(){
     for(int hit = 0; hit < nhits ; ++hit){
       H = HITS->Hits.at(hit);
       if(H.chip != 0) continue;
-      if(H.ch != 20) continue;
+      if(H.ch != 30) continue;
       for(int sca = 0;sca < NSCA; ++sca){
 	if(TS[sca] == 2)
 	  ADC[ev] = H.SCA_hg[sca];}
@@ -195,7 +196,7 @@ void makePlots::Loop(){
       c1->Update();
       getchar();
       c1->SaveAs("goodHG.png");
-  
+  */
 }
 vector<int> makePlots::read_yaml(string title){
 
@@ -305,8 +306,8 @@ void makePlots::calib(){
   int end   = input_RUN.find(".root");
   runtitle = input_RUN.substr(start+1,end-start-1);
   vector<int> inj_CH;
-  inj_CH = read_yaml(runtitle);
-  
+  //inj_CH = read_yaml(runtitle);
+  inj_CH.push_back(40);
   app = new TApplication("app",0,0);
   TCanvas *c1 = new TCanvas;
   int nevents = fChain->GetEntries();
@@ -337,7 +338,7 @@ void makePlots::calib(){
 	H = HITS->Hits.at(hit);
 	if(H.ch != inj_ch) continue;
 	for(int sca = 0;sca < NSCA; ++sca){
-	  if(TS[sca] == 5){
+	  if(TS[sca] == 4){
 	    HG[H.chip][ev] = H.SCA_hg[sca];
 	    LG[H.chip][ev] = H.SCA_lg[sca];
 	  }
@@ -348,18 +349,18 @@ void makePlots::calib(){
 
   
     TMultiGraph *mgr = new TMultiGraph();
-    TLegend *leg = new TLegend(0.7,0.3,0.87,0.47);
+    TLegend *leg = new TLegend(0.65,0.25,0.87,0.52);
     
     char GR_save[100],leg_desc[100];
     
     for(int ski = 0; ski < 4 ; ++ski){
       gr = new TGraph(nevents, dac,HG[ski] );
       gr->SetMarkerStyle(20);
-      gr->SetMarkerSize(0.4);
+      gr->SetMarkerSize(0.8);
       gr->SetMarkerColor(ski+1);
       gr->Draw("AP");
       gr->GetXaxis()->SetTitle("dac");
-      gr->GetYaxis()->SetTitle("HGTS5");
+      gr->GetYaxis()->SetTitle("HGTS4");
       mgr->Add(gr);
       sprintf(leg_desc,"CHIP%d",ski);
       leg->AddEntry(gr,leg_desc,"P");
@@ -374,12 +375,12 @@ void makePlots::calib(){
     for(int ski = 0; ski < 4 ; ++ski){
       gr = new TGraph(nevents, dac,LG[ski] );
       gr->SetMarkerStyle(22);
-      gr->SetMarkerSize(0.4);
+      gr->SetMarkerSize(0.8);
       gr->SetMarkerColor(ski+1);
       gr->Draw("AP");
       gr->SetTitle(plot_title);
       gr->GetXaxis()->SetTitle("dac");
-      gr->GetYaxis()->SetTitle("LGTS5");
+      gr->GetYaxis()->SetTitle("LGTS4");
       mgr->Add(gr);
 
       sprintf(plot_title,"%s_%dCH_Id%d_LG%d", runtitle.c_str(),(int)inj_CH.size(),inj_ch,ski);
@@ -393,7 +394,7 @@ void makePlots::calib(){
     for(int ski = 0; ski < 4 ; ++ski){
       gr = new TGraph(nevents, dac,TOT[ski] );
       gr->SetMarkerStyle(21);
-      gr->SetMarkerSize(0.4);
+      gr->SetMarkerSize(0.8);
       gr->SetMarkerColor(ski+1);
       gr->Draw("AP");
       gr->SetTitle(plot_title);
@@ -412,7 +413,7 @@ void makePlots::calib(){
 
     mgr->Draw("ap");
     mgr->GetXaxis()->SetTitle("dac");
-    mgr->GetYaxis()->SetTitle("HGLGTS5 + TOT");
+    mgr->GetYaxis()->SetTitle("HGLGTS4 + TOT");
     leg->SetBorderSize(0);
     leg->Draw("same");
     

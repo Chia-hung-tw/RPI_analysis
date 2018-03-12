@@ -6,11 +6,14 @@
 #include <iomanip>
 #include <stdint.h>
 #include "CHMapping.h"
+//#include <bitset> // for cout config bits
+#include <vector>
 //For Ntuplizer
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
 #include <cstdint>
+
 
 #include "hit_hits_class.h"
 ClassImp(hit);
@@ -37,7 +40,7 @@ int dac = 0;
 int evt_counter;
 int rollpos;
 uint32_t global_TS[4];
-int insert_ch = -1;
+vector<int> insert_ch;
 
 int raw_type(const char* filename);
 int decode_raw(int rawtype);
@@ -46,6 +49,7 @@ int roll_position(); //Output is the location of TS 0
 void globalTS();
 hitcollection Fill_ntuple();
 CHMapping chmap;
+void read_inj_config(); //Read charge injection config
 
 
 
@@ -94,7 +98,10 @@ int main(){
 	cout << "injection file: " << fileinj_t << endl;
 	string dum_line;
 	for(int i = 0 ; i < 5; ++i) {
-	  if(i == 1) fileinj >> insert_ch;
+	  if(i == 1) {
+	    int tmp_CH;
+	    fileinj >> tmp_CH;
+	    insert_ch.push_back(tmp_CH);}
 	  getline(fileinj,dum_line);//remove header
 	}
       }
@@ -111,12 +118,11 @@ int main(){
       }
       //Remove chip config
       if(rawT == 1 || rawT == 2){
-	uint8_t header[2] = {0,0};
-	for(int i = 0 ; i < 24 ; ++i){
-	  file.read( reinterpret_cast<char*>(header), 2 );
-	  header[0] =  config[2*i];
-	  header[1] =  config[2*i+1];
-	}
+	uint8_t header[48];
+	file.read( reinterpret_cast<char*>(header), 48 );
+	for(int i = 0 ; i < 48 ; ++i)
+	  config[i]   = header[i];
+	read_inj_config(); 
       }
       //Loop event till the end of run
       while(true){
@@ -137,6 +143,7 @@ int main(){
 	  else{
 	    for(int i = 2; i < evtsize; ++i)
 	      file >> raw[i];}
+	  
 	  decode_raw(rawT);
 	  format_channels();
 	  rollpos = roll_position();
@@ -194,6 +201,46 @@ int raw_type(const char* filename){
 	     << endl;
     return 3;}
 }
+
+void read_inj_config(){
+
+  insert_ch.clear();
+  
+  unsigned char lowB,highB;
+  int bitC = 0;
+  int guess_CH = 0;
+  bool ch_flag = false;
+  for(int Q = 0; Q < 48 ; ++Q){
+    lowB  = config[Q];
+    highB = (lowB >> 4) & 0xf;
+    lowB  = lowB & 0xf;
+    for(int bit = 0; bit < 8 ; ++bit){
+      int a;
+      if( bit < 4 ){
+	a = ( highB >> ( 3 - bit )) & 1;}
+      else{
+	a = ( lowB >> ( 7 - bit )) & 1;}
+      if(ch_flag && guess_CH < 64) {
+	if(a == 1){
+	  cout << "Inj_CH = " << ( 63 - guess_CH ) << ", ";
+	  insert_ch.push_back( 63 - guess_CH );
+	      }
+	guess_CH++;	      
+      }
+      bitC++;
+      if(bitC == 83 || bitC == 147){
+	ch_flag = true;}
+      else
+	ch_flag = false;
+    }
+  }
+  cout << endl;
+  if((int) insert_ch.size() == 0){
+    cout << "Find no insertion CH -> take this run pedestal run!" << endl;
+  }
+  
+}
+
 
 int decode_raw(int rawtype){
     int i, j, k;
@@ -408,7 +455,7 @@ hitcollection Fill_ntuple(){
   
   tmp_hits.evt_num = evt_counter;
   tmp_hits.hit_num = hit_counter;
-  tmp_hits.inj_ch  = insert_ch;
+  tmp_hits.inj_ch.assign(insert_ch.begin(),insert_ch.begin()+insert_ch.size());
   tmp_hits.inj_dac = dac;
 
   for(int i = 0 ; i < 4 ; ++i)

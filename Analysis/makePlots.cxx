@@ -137,11 +137,11 @@ void makePlots::Loop(){
       //if(ev == 400){
 	//sprintf(plot_title,"%s.png",plot_title);
 	//c1->SaveAs(plot_title);} // remove the comment to save plots
-      //getchar();
-      if(H.chip == 0 && ev %5 == 0){
-	sprintf(plot_title,"gif/old_DAQ/HG_evt%d.png",ev);
+      getchar();
+      //if(H.chip == 0 && ev %5 == 0){
+      //sprintf(plot_title,"gif/old_DAQ/HG_evt%d.png",ev);
 	//c1->SaveAs(plot_title);
-      }
+      //}
     }
   }      
   

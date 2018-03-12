@@ -43,7 +43,7 @@ public:
   std::vector< hit > Hits; // Vector of hits in that event
   int evt_num;             // Event number for the event
   int hit_num;             // number of hits inside the Hits vector
-  int inj_ch;              // The charge insertion channel, -1 if not inserting
+  std::vector<int> inj_ch; // The charge insertion channel(s), empty if ped run
   int inj_dac;             // DAC ctrl in the acquisition for the event, will be
                            // 0 if it's a pedestal run. -1 for fixed pulse ins
 

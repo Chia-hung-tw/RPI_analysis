@@ -228,7 +228,7 @@ void read_inj_config(){
 	guess_CH++;	      
       }
       bitC++;
-      if(bitC == 83 || bitC == 147){
+      if(bitC >= 83 && bitC <= 147){
 	ch_flag = true;}
       else
 	ch_flag = false;

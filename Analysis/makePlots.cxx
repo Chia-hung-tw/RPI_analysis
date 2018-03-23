@@ -19,6 +19,7 @@ makePlots::makePlots(TChain* inchain):fChain(inchain)
   HITS = new hitcollection;
   app = new TApplication("app",0,0);  
   readmap();
+  cout<<"hi"<<endl;
   cout << "Constructor of makePlot ... \n\n" << endl;
 }
 //Destructor

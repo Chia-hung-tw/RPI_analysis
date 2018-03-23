@@ -45,8 +45,8 @@ class makePlots{
   void readmap();
   void InitTH2Poly(TH2Poly& poly); //Give frame to TH2Poly
 
-  TApplication *app;
   TTree          *fChain;
+  TApplication   *app;
   hitcollection  *HITS;
   hit            H;
   int            TS[NSCA];

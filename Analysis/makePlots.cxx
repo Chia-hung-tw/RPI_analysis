@@ -9,7 +9,7 @@
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
-
+#include "TROOT.h"
 
 ClassImp(hit)
 ClassImp(hitcollection)
@@ -33,7 +33,8 @@ void makePlots::Init(){
 }
 
 void makePlots::Loop(){
-
+  //TApplicaition app("app",0,0);
+  //app->Run(kFALSE);
   Init();
   //P_and_N(0,1);
   //read_P_and_N("ped_result/RUN_101117_0925");
@@ -97,7 +98,7 @@ void makePlots::Loop(){
     poly->SetTitle(plot_title);
     c1->Update();
     getchar();
-    delete poly;
+    //delete poly;
   }
   //============== End of the example to use TH2Poly to draw plot ==============
 

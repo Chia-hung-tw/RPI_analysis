@@ -47,6 +47,7 @@ void makePlots::Loop(){
   char plot_title[50];
   
   int nevents = fChain->GetEntries();
+  P_and_N(0,0);
   /*
   //============== Example for filling chip 0 ch 20 SCA0 to hist ==============
 
@@ -231,6 +232,7 @@ vector<int> makePlots::read_yaml(string title){
   return inj_CH;
 }
 
+
 void makePlots::calib_ntuple(){
 
   Init();
@@ -302,23 +304,29 @@ void makePlots::calib(){
 
   Init();
 
+  fChain->GetEntry(0);
+  vector<int > vec_inj_ch;
+  vec_inj_ch.assign(HITS->inj_ch.begin(),HITS->inj_ch.begin()+HITS->inj_ch.size());
+  if((int)vec_inj_ch.size() == 0){
+    cout << "This run has no injection channel! skip it!" << endl;
+    return;}
+  
+  cout << "number of injection channel: "<< vec_inj_ch.size() << endl;
+
   string runtitle;
   int start = input_RUN.find_last_of("/");
   int end   = input_RUN.find(".root");
   runtitle = input_RUN.substr(start+1,end-start-1);
-  vector<int> inj_CH;
-  //inj_CH = read_yaml(runtitle);
-  inj_CH.push_back(40);
-  app = new TApplication("app",0,0);
+  
+  
   TCanvas *c1 = new TCanvas;
   int nevents = fChain->GetEntries();
-
-  cout << "inj number: "<< inj_CH.size() << endl;
-  for(int inC = 0; inC < (int)inj_CH.size() ; ++inC){
-    cout << "CH " << inj_CH.at(inC) << endl;
-    int inj_ch = inj_CH.at(inC);
+  
+  for(int inC = 0; inC < (int)vec_inj_ch.size() ; ++inC){
+    cout << "CH " << vec_inj_ch.at(inC) << endl;
+    int tmp_inj_ch = vec_inj_ch.at(inC);
     char plot_title[150];  
-    sprintf(plot_title,"calib_result/root/%dCH_Id%d_%s.root", (int)inj_CH.size(),inj_ch,runtitle.c_str());
+    sprintf(plot_title,"calib_result/root/%dCH_Id%d_%s.root", (int)vec_inj_ch.size(),tmp_inj_ch,runtitle.c_str());
 
     TFile *outr = new TFile(plot_title,"recreate");
     
@@ -337,7 +345,7 @@ void makePlots::calib(){
     
       for(int hit = 0; hit < nhits ; ++hit){
 	H = HITS->Hits.at(hit);
-	if(H.ch != inj_ch) continue;
+	if(H.ch != tmp_inj_ch) continue;
 	for(int sca = 0;sca < NSCA; ++sca){
 	  if(TS[sca] == 4){
 	    HG[H.chip][ev] = H.SCA_hg[sca];
@@ -350,14 +358,14 @@ void makePlots::calib(){
 
   
     TMultiGraph *mgr = new TMultiGraph();
-    TLegend *leg = new TLegend(0.65,0.25,0.87,0.52);
+    TLegend *leg = new TLegend(0.7,0.3,0.87,0.47);
     
     char GR_save[100],leg_desc[100];
     
     for(int ski = 0; ski < 4 ; ++ski){
       gr = new TGraph(nevents, dac,HG[ski] );
       gr->SetMarkerStyle(20);
-      gr->SetMarkerSize(0.8);
+      gr->SetMarkerSize(0.4);
       gr->SetMarkerColor(ski+1);
       gr->Draw("AP");
       gr->GetXaxis()->SetTitle("dac");
@@ -365,7 +373,7 @@ void makePlots::calib(){
       mgr->Add(gr);
       sprintf(leg_desc,"CHIP%d",ski);
       leg->AddEntry(gr,leg_desc,"P");
-      sprintf(plot_title,"%s_%dCH_Id%d_HG%d", runtitle.c_str(),(int)inj_CH.size(),inj_ch,ski);
+      sprintf(plot_title,"%s_%dCH_Id%d_HG%d", runtitle.c_str(),(int)vec_inj_ch.size(),tmp_inj_ch,ski);
       gr->SetTitle(plot_title);
       
       sprintf(GR_save,"HGchip%d",ski);
@@ -376,7 +384,7 @@ void makePlots::calib(){
     for(int ski = 0; ski < 4 ; ++ski){
       gr = new TGraph(nevents, dac,LG[ski] );
       gr->SetMarkerStyle(22);
-      gr->SetMarkerSize(0.8);
+      gr->SetMarkerSize(0.4);
       gr->SetMarkerColor(ski+1);
       gr->Draw("AP");
       gr->SetTitle(plot_title);
@@ -384,7 +392,7 @@ void makePlots::calib(){
       gr->GetYaxis()->SetTitle("LGTS4");
       mgr->Add(gr);
 
-      sprintf(plot_title,"%s_%dCH_Id%d_LG%d", runtitle.c_str(),(int)inj_CH.size(),inj_ch,ski);
+      sprintf(plot_title,"%s_%dCH_Id%d_LG%d", runtitle.c_str(),(int)vec_inj_ch.size(),tmp_inj_ch,ski);
       gr->SetTitle(plot_title);
 
       
@@ -395,7 +403,7 @@ void makePlots::calib(){
     for(int ski = 0; ski < 4 ; ++ski){
       gr = new TGraph(nevents, dac,TOT[ski] );
       gr->SetMarkerStyle(21);
-      gr->SetMarkerSize(0.8);
+      gr->SetMarkerSize(0.4);
       gr->SetMarkerColor(ski+1);
       gr->Draw("AP");
       gr->SetTitle(plot_title);
@@ -403,7 +411,7 @@ void makePlots::calib(){
       gr->GetYaxis()->SetTitle("TOT");
       mgr->Add(gr);
 
-      sprintf(plot_title,"%s_%dCH_Id%d_TOT%d", runtitle.c_str(),(int)inj_CH.size(),inj_ch,ski);
+      sprintf(plot_title,"%s_%dCH_Id%d_TOT%d", runtitle.c_str(),(int)vec_inj_ch.size(),tmp_inj_ch,ski);
       gr->SetTitle(plot_title);
 
       
@@ -421,8 +429,7 @@ void makePlots::calib(){
     c1->Update();
     //getchar();
 
-    //sprintf(plot_title,"%s_calib_CH%d.png", runtitle.c_str(),inj_ch);
-    sprintf(plot_title,"calib_result/Plots/%dCH_Id%d_%s.png", (int)inj_CH.size(),inj_ch,runtitle.c_str());
+    sprintf(plot_title,"calib_result/Plots/%dCH_Id%d_%s.png", (int)vec_inj_ch.size(),tmp_inj_ch,runtitle.c_str());
     c1->SaveAs(plot_title);
     outr->Close();
   }  
@@ -471,7 +478,6 @@ void makePlots::Global_TS_study(){
     fake_gr->SetMarkerColor(i+2);
     fake_gr->SetMarkerSize(1.2);
     leg->AddEntry(fake_gr,lab,"P");
-
   }
   ifstream runN("input.txt");
   string Fname;
@@ -560,7 +566,42 @@ void makePlots::P_and_N(int option,bool output){
 	  sigma_LG[i][j][k] = (float)sumsqLG  [i][j][k]/mem_of_SCA[i][j][k];
 	  sigma_LG[i][j][k] -= avg_LG  [i][j][k]*avg_LG  [i][j][k];
 	  sigma_LG[i][j][k] = sqrt(sigma_LG[i][j][k]); }}}
-  
+
+
+    
+    /*
+    TCanvas *c1 = new TCanvas;
+    TH2Poly *poly = new TH2Poly;
+    InitTH2Poly(*poly); 
+    gStyle->SetPaintTextFormat("4.2f");
+    gStyle->SetOptStat(0);
+    //gStyle->SetStatFormat("4.2f");
+    for(int i = 0 ; i < NSCA ; ++i) TS[i] = HITS->rollposition[i];
+    
+    int nhits = HITS->hit_num;
+    for(int hit = 0; hit < nhits ; ++hit){
+      H = HITS->Hits.at(hit);
+      if(!H.CCorNC) continue; // remove unconnected channel
+      
+      int forCH = H.chip*32+H.ch/2;
+      float X = CHmap[forCH].first;
+      float Y = CHmap[forCH].second;
+      float xd;
+      xd = sigma_HG[H.chip][H.ch][0];
+      
+      poly->Fill(X,Y,xd);}
+    char plot_title[50];
+    
+    sprintf(plot_title,"INJ_HGSCA0");
+    poly->SetXTitle("cm");
+    poly->SetYTitle("cm");
+    poly->Draw("colztext");
+    poly->SetTitle(plot_title);
+    c1->Update();
+    c1->SaveAs("inj_noiseHGSCA0.png");
+    getchar();
+    delete poly;
+    */
   if(output == true){
     string filename;
     filename = input_RUN;

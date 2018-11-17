@@ -261,7 +261,7 @@ int decode_raw(int rawtype){
 	  x = raw[offset + i*16 + j];
 	  x = x & 15;
 	  for (k = 0; k < 4; k = k + 1){
-	    ev[k][i] = ev[k][i] | (unsigned int) (((x >> (3 - k) ) & 1) << (15 - j));
+	    ev[k][i] = ev[k][i] | (unsigned int) (((x >> k ) & 1) << (15 - j));
 	  }
         }
       }
@@ -273,8 +273,11 @@ int decode_raw(int rawtype){
 	  y = (x >> 4) & 0xf;
 	  x = x & 0xf;
 	  for (k = 0; k < 4; k = k + 1){
-	    ev[k][i] = ev[k][i] | (((x >> (3 - k) ) & 1) << (14 - j*2));
-	    ev[k][i] = ev[k][i] | (((y >> (3 - k) ) & 1) << (15 - j*2));}
+	    //ev[k][i] = ev[k][i] | (((x >> (3 - k) ) & 1) << (14 - j*2));
+	    //ev[k][i] = ev[k][i] | (((y >> (3 - k) ) & 1) << (15 - j*2));
+	    ev[k][i] = ev[k][i] | (uint16_t)((x >> k)  & 1) << (14 - j*2);
+	    ev[k][i] = ev[k][i] | (uint16_t)((y >> k)  & 1) << (15 - j*2);
+	  }
 	}
       }
     }
@@ -323,6 +326,7 @@ int roll_position(){
   for (chip =0; chip < 4; chip = chip +1 ){
     unsigned int roll;
     roll = ev[chip][1920] & 0x1FFF;
+    //cout << (int)roll << endl;
     if(chip == 0) roll_check = roll;
     else if( roll_check != roll ){
       cout << "Problematic event!( No. " << evt_counter <<") Chip" << chip
@@ -460,11 +464,16 @@ hitcollection Fill_ntuple(){
 
   for(int i = 0 ; i < 4 ; ++i)
     tmp_hits.global_ts[i] = (int) global_TS[i];
+  // BUG! conflict with framework
   for(int i = 0 ; i < NSCA; ++i){
     if(i >= rollpos)
       tmp_hits.rollposition[i] = i - rollpos;
     else
-      tmp_hits.rollposition[i] = NSCA - rollpos + i;}
+      tmp_hits.rollposition[i] = NSCA - rollpos + i; }
+
+  // reverse
+  for(int i = 0 ; i < NSCA; ++i){
+    tmp_hits.rollposition[i] = 12 - tmp_hits.rollposition[i];  }  
 
   return tmp_hits;
 }

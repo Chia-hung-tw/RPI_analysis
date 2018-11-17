@@ -118,12 +118,15 @@ void makePlots::Loop(){
     //if(ev % 5 != 0) continue;
     //if(ev < 200) continue;
     fChain -> GetEntry(ev);
-    for(int i = 0 ; i < NSCA ; ++i) TS[i] = HITS->rollposition[i];    
+    for(int i = 0 ; i < NSCA ; ++i) {
+      TS[i] = HITS->rollposition[i];}
+    //cout << "SCA " << i << ", TS = " << TS[i] << endl;
+    //getchar();
     int nhits = HITS->hit_num;
     for(int hit = 0; hit < nhits ; ++hit){
       H = HITS->Hits.at(hit);
       if(H.chip != 0) continue;      
-      if(H.ch != 30 ) continue;
+      if(H.ch != 20 ) continue;
 
       gr = new TGraph(13, TS,H.SCA_hg );
       gr->SetMarkerColor(H.chip+2);
@@ -819,6 +822,7 @@ atlasStyle->SetOptFit(0);
 // put tick marks on top and RHS of plots
 atlasStyle->SetPadTickX(1);
 atlasStyle->SetPadTickY(1);
+
 
 gROOT->SetStyle("Plain");
 

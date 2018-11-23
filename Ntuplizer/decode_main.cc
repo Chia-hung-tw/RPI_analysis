@@ -336,11 +336,15 @@ int roll_position(){
     unsigned char bits[13];
     first = -1; // first is actually second XD
     sec   = -1;
+    int inv_bits[13];
     for(int bit = 0; bit < 13 ; ++bit){
       bits[bit] = (roll >> bit) & 1;}
-    for(int bit = 0 ; bit < 13; ++bit) {if((int)bits[bit] == 1) first = bit;}
+    for(int bit = 0; bit < 13 ; ++bit){
+      inv_bits[bit] = bits[12-bit];}
+
+    for(int bit = 0 ; bit < 13; ++bit) {if((int)inv_bits[bit] == 1) first = bit;}
     for(int bit = 0 ; bit < 13; ++bit) {
-      if((int)bits[bit] == 1 && first != bit) sec = bit;}
+      if((int)inv_bits[bit] == 1 && first != bit) sec = bit;}
     if(first == 12 && sec == 11) rollpos = 0;
     else if(first == 12 && sec == 0)  rollpos = 1;
     else rollpos = first+1;
@@ -465,15 +469,14 @@ hitcollection Fill_ntuple(){
   for(int i = 0 ; i < 4 ; ++i)
     tmp_hits.global_ts[i] = (int) global_TS[i];
   // BUG! conflict with framework
+  //cout << "rollpos = " << rollpos << endl;
   for(int i = 0 ; i < NSCA; ++i){
     if(i >= rollpos)
       tmp_hits.rollposition[i] = i - rollpos;
     else
-      tmp_hits.rollposition[i] = NSCA - rollpos + i; }
-
-  // reverse
-  for(int i = 0 ; i < NSCA; ++i){
-    tmp_hits.rollposition[i] = 12 - tmp_hits.rollposition[i];  }  
+      tmp_hits.rollposition[i] = NSCA - rollpos + i;
+    
+  }
 
   return tmp_hits;
 }

@@ -433,13 +433,19 @@ hitcollection Fill_ntuple(){
     for (ch = 0; ch < 64; ch = ch +1 ){
       for (sca = 0 ; sca < NSCA ; sca = sca +1){
 	//HG SCA
-	SCA_hg[sca] = dati_ordered[chip][ch][sca];
+	SCA_hg[sca] = dati_ordered[chip][ch][12-sca];
+	// if(ch == 0 || ch == 2){
+	//   cout << "SCA " << sca << ", " << SCA_hg[sca] << endl;}	
 	//LG SCA
-	SCA_lg[sca] = dati_ordered[chip][ch+64][sca];	}
+	SCA_lg[sca] = dati_ordered[chip][ch+64][12-sca];	}
       TOAR = dati_ordered[chip][ch][13];
       TOTS = dati_ordered[chip][ch][14];
       TOAF = dati_ordered[chip][ch+64][13];
       TOTF = dati_ordered[chip][ch+64][14];
+      // if(ch == 0 || ch == 2){
+      // 	cout << "TOTF = " << TOTF << ", TOTS = " << TOTS
+      // 	     << ", TOAF = " << TOAF << ", TOAR = " << TOAR << endl;
+      // 	getchar();}
       CCorNC = (ch %2 == 0) ? true : false;
        int readposch = chip*2+ch/2;
       posx = chmap.CH_x[readposch];
